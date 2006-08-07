@@ -1,17 +1,28 @@
-Apache-LangPrefCookie version 0.01
+Apache-LangPrefCookie version 1.00
 ==================================
+DESCRIPTION
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+This module looks for a cookie providing a language-code as its value.
+This preference is then implanted into httpd's representation of the
+Accept-Language header, just as if the client had asked for it as #1
+choice. The original preferences are still present, albeit with lowered
+q-values. The cookie's name is configurable, as described in the
+examples. Setting/modifying/deleting such a cookie is to be handled
+separately, Apache::LangPrefCookie just consumes it.
 
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+After that, it's up to httpd's mod_negotiation to choose the best
+deliverable representation.
 
+CHANGES
+
+0.05 - first released Version.
+
+1.00 - fix typo in regexp
+     - cleanup Makefile.PL, Perl >= 5.6.0 required.
+     - fix README, docs clarification
+     - more tests
+
+     
 INSTALLATION
 
 To install this module type the following:
@@ -31,7 +42,7 @@ COPYRIGHT AND LICENCE
 
 Put the correct copyright and licence information here.
 
-Copyright (C) 2005 by Hansjoerg Pehofer
+Copyright (C) 2005-2006 by Hansjoerg Pehofer
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,

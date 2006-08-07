@@ -1,4 +1,3 @@
-# $Id: LangPrefCookie.pm,v 1.11 2005/12/22 16:03:43 c10232 Exp $
 package Apache::LangPrefCookie;
 
 use strict;
@@ -7,8 +6,9 @@ use warnings;
 use Apache::Constants qw(OK DECLINED);
 use Apache::Request;
 use Apache::Cookie;
+use Apache::Log ();
 
-our $VERSION = '0.05';
+our $VERSION = '1.00';
 
 sub handler {
     my $r = Apache::Request->new(shift);
@@ -22,16 +22,18 @@ sub handler {
     return DECLINED unless exists $cookies{$cookie_name}
       and my $cookie_pref_lang = $cookies{$cookie_name}->value();
 
-    # dont parse an empty header just to get "Use of uninitialized value in" warnings
-    if (defined $r->header_in("Accept-Language") and length $r->header_in("Accept-Language")) {
+    # dont parse an empty header just to get "Use of uninitialized value
+    # in" warnings
+    if (defined $r->header_in("Accept-Language")
+        and length $r->header_in("Accept-Language")) {
         @ua_lang_prefs = parse_accept_language_header($r->header_in("Accept-Language"));
     }
     else {
-        # RFC 2616 states:
-        # "If no Accept-Language header is present in the request, the server
-        #  SHOULD assume that all languages are equally acceptable."
-        # Since we still are going to build one, respect the original demand
-        # by inserting '*'.
+        # RFC 2616 states: "If no Accept-Language header is present in
+        # the request, the server SHOULD assume that all languages are
+        # equally acceptable."  Since we are going to fool httpd into
+        # thinking there is one, we respect the original demand by
+        # inserting '*'.
         @ua_lang_prefs = q/*/;
     }
 
@@ -40,7 +42,7 @@ sub handler {
     unless ($cookie_pref_lang eq $ua_lang_prefs[0]) {
         my ($qvalue, $language_ranges) = (1, '');
         map {
-            if (m/^(?:\w{1,8}(?:-\w{1,8})*$|\*)/) {
+            if (m/^(?:\w{1,8}(?:-\w{1,8})*|\*)$/) {
                 $language_ranges .= "$_;q=$qvalue, ";
                 $qvalue *= .9;
             }
@@ -81,68 +83,54 @@ __END__
 
 =head1 NAME
 
-Apache::LangPrefCookie - Override the request's Accept-Language HTTP-Header
-with a preference provided by a Cookie.
+Apache::LangPrefCookie - implant a language-preference provided by a
+cookie into httpd's representation of the Accept-Language HTTP-header.
 
 =head1 SYNOPSIS
 
-  PerlInitHandler  Apache::LangPrefCookie
-
-  # optionally set a custom cookie-name, default is "prefer-language"
-  PerlSetVar LangPrefCookieName "mypref"
+  <Location />
+     PerlInitHandler  Apache::LangPrefCookie
+  </Location>
 
   <Location /foo>
-     # This also work inside container directives. But you might not get
-     # what you want if you set it *both* in- and outside containers.
-     PerlInitHandler  Apache::LangPrefCookie
+     # optionally set a custom cookie-name, default is "prefer-language"
      PerlSetVar LangPrefCookieName "foo-pref"
-  <Location>
+  </Location>
 
 
 =head1 DESCRIPTION
 
-This Module looks for a cookie providing a language-code as its
-value. This preference is then squished into httpd's idea of the
-C<Accept-Language> header as if the Client had asked for it as #1
+This module looks for a cookie providing a language-code as its value.
+This preference is then implanted into httpd's representation of the
+C<Accept-Language> header, just as if the client had asked for it as #1
 choice. The original preferences are still present, albeit with lowered
-q-values.  F<Apache::LangPrefCookie> leaves the task to
-set/modify/delete such a cookie to I<you>, it just consumes it
-:-). However, the cookie's name is configurable, as described in the
-Example below.
+q-values. The cookie's name is configurable, as described in the
+examples. Setting/modifying/deleting such a cookie is to be handled
+separately, F<Apache::LangPrefCookie> just consumes it.
 
-Its then up to httpd's mod_negotiation to choose the best deliverable
-representation.
+After that, it's up to httpd's mod_negotiation to choose the best
+deliverable representation.
 
 =head2 WHY?
 
-We are cheating on RFC-2626 with this. I have somewhat ambivalent
-feelings towards that, so bear with me for some words of justification:
+I had demands to let users switch language I<once> for a given
+site. Also, the availability and languages of translations offered, vary
+over places within this site.
 
 In theory a user-agent should help its users to set a reasonable choice
 of language(s). In practice, the dialog is hidden in the 3rd level of
 some menu, maybe even misguiding the user in his selections. (See
 L<http://ppewww.ph.gla.ac.uk/~flavell/www/lang-neg.html>, especially the
-section I<Language subset selections> for examples.) But this is
-probably the wrong place to rant over this.
+section I<Language subset selections> for examples.)
 
-I dislike solutions involving virtual paths, as they lengthen some and
-generally increase the number of URIs for a given resource.  (See
-L<http://www.w3.org/TR/2004/WD-webarch-20040705/#avoid-uri-aliases>).
+There might also be scenarios, where one wants to let users set a
+different preference just for certain realms within one site.
 
-There might be demand to switch for a given site once (not for every single
-document as with explicit links to the other language variants of the
-page in question, which still works despite our cookie, by the way),
-without touching the browsers configuration. There also are scenarios
-where one wants to let users express a different preference just for
-certain realms within one site.
+I dislike solutions involving virtual paths, as they lengthen some, and
+generally increase the number of URIs for a given resource.
 
-This approach would work with all Accept* headers. I decided against
-implementing a general solution for all of them, because (1) I want to
-keep this as focused and simple as possible and (2) I just don't see a
-real need for it.
-
-The bottom-line: This Module might be useful to scratch a specific itch,
-if, and only if there is one ;-)
+Admittedly, the itch scratched here might very well be quite specific
+for the Author. :-)
 
 =head1 EXAMPLE COOKIE
 
@@ -161,17 +149,7 @@ C<mypref=x-klingon;expires=Saturday 31-Dec-05 24:00:00 GMT;path=/>
 
 =item *
 
-I haven't even looked into mod_perl2 yet, so this module might not work
-with it.
-
-=item *
-
-This should be a native C module for httpd.
-
-=item *
-
-Apart from these: This is first public release, so I'm not aware
-of any other bugs at this time.
+Not tested with Apache2
 
 =back
 
@@ -193,7 +171,7 @@ Hansjoerg Pehofer, E<lt>hansjoerg.pehofer@uibk.ac.atE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2005 by Hansjoerg Pehofer
+Copyright (C) 2005-2006 by Hansjoerg Pehofer
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,
