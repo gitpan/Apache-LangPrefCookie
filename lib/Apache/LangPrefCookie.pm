@@ -8,7 +8,7 @@ use Apache::Request;
 use Apache::Cookie;
 use Apache::Log ();
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 sub handler {
     my $r = Apache::Request->new(shift);
@@ -49,6 +49,7 @@ sub handler {
         } ($cookie_pref_lang, @ua_lang_prefs);
         $language_ranges =~ s/,\s*$//;
         return DECLINED unless length $language_ranges;
+        $r->header_out('Vary', 'cookie, ' . $r->header_out('Vary'));
         $r->header_in("Accept-Language", $language_ranges);
         $r->log->debug("Cookie \"$cookie_name\" requested \"$cookie_pref_lang\", set \"Accept-Language: $language_ranges\"");
     }
@@ -143,16 +144,6 @@ C<PerlSetVar LangPrefCookieName "mypref">
 
 C<mypref=x-klingon;expires=Saturday 31-Dec-05 24:00:00 GMT;path=/>
 
-=head1 BUGS
-
-=over
-
-=item *
-
-Not tested with Apache2
-
-=back
-
 =head1 SEE ALSO
 
 L<mod_perl(3)>
@@ -164,6 +155,9 @@ L<http://httpd.apache.org/docs/1.3/mod/mod_negotiation.html>
 L<http://ppewww.ph.gla.ac.uk/~flavell/www/lang-neg.html>
 
 L<http://www.w3.org/TR/2004/WD-webarch-20040705/#avoid-uri-aliases>
+
+Apache2 has native means to the same end:
+L<http://httpd.apache.org/docs/2.2/content-negotiation.html#better>
 
 =head1 AUTHOR
 

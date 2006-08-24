@@ -31,3 +31,6 @@ Revision history for Perl extension Apache::LangPrefCookie.
      - cleanup Makefile.PL, Perl >= 5.6.0 required.
      - Fix README, docs clarifications
      - more tests
+
+1.01 - set Vary header if needed
+     - updated references to Apache2 in the pod
