@@ -34,3 +34,5 @@ Revision history for Perl extension Apache::LangPrefCookie.
 
 1.01 - set Vary header if needed
      - updated references to Apache2 in the pod
+
+1.02 - set Vary header whenever handler is run

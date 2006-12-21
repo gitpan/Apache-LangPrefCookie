@@ -8,7 +8,7 @@ use Apache::Request;
 use Apache::Cookie;
 use Apache::Log ();
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 sub handler {
     my $r = Apache::Request->new(shift);
@@ -17,6 +17,7 @@ sub handler {
     my @ua_lang_prefs;
 
     # $r->log->debug("Looking for cookie: \"$cookie_name\"");
+    $r->header_out('Vary', 'cookie' . $r->header_out('Vary'));
 
     # if we have no cookie, this is none of our business
     return DECLINED unless exists $cookies{$cookie_name}
@@ -49,7 +50,6 @@ sub handler {
         } ($cookie_pref_lang, @ua_lang_prefs);
         $language_ranges =~ s/,\s*$//;
         return DECLINED unless length $language_ranges;
-        $r->header_out('Vary', 'cookie, ' . $r->header_out('Vary'));
         $r->header_in("Accept-Language", $language_ranges);
         $r->log->debug("Cookie \"$cookie_name\" requested \"$cookie_pref_lang\", set \"Accept-Language: $language_ranges\"");
     }
