@@ -1,4 +1,4 @@
-Apache-LangPrefCookie version 1.02
+Apache-LangPrefCookie version 1.03
 ==================================
 DESCRIPTION
 
@@ -8,7 +8,7 @@ Accept-Language header, just as if the client had asked for it as #1
 choice. The original preferences are still present, albeit with lowered
 q-values. The cookie's name is configurable, as described in the
 examples. Setting/modifying/deleting such a cookie is to be handled
-separately, Apache::LangPrefCookie just consumes it.
+separately; Apache::LangPrefCookie just consumes it.
 
 After that, it's up to httpd's mod_negotiation to choose the best
 deliverable representation.
@@ -26,7 +26,12 @@ CHANGES
      - updated references to Apache2 in the pod
 
 1.02 - set Vary header whenever handler is run
-     
+
+1.03 - avoid $` (dada)
+     - avoid warnings about uninitialised strings        
+     - fix PREREQ_PM 
+
+
 INSTALLATION
 
 To install this module type the following:
@@ -46,7 +51,7 @@ COPYRIGHT AND LICENCE
 
 Put the correct copyright and licence information here.
 
-Copyright (C) 2005-2006 by Hansjoerg Pehofer
+Copyright (C) 2005-2008 by Hansjoerg Pehofer
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.7 or,
